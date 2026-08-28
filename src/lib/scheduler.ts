@@ -132,7 +132,9 @@ export function buildPlan(config: PlanConfig, seed = 1): Plan {
   const lastDay = new Map<string, number>();
   const scheduled = new Map<string, number>();
   for (const a of activities) {
-    credit.set(a.id, sessionsPerWeek(a) / 7);
+    // Warm start: begin partway through the accrual cycle so the first week
+    // isn't systematically short, with a little variation per activity.
+    credit.set(a.id, 0.95 - rand() * 0.35);
     lastDay.set(a.id, -999);
     scheduled.set(a.id, 0);
   }
