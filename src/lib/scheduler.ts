@@ -180,6 +180,30 @@ export function buildPlan(config: PlanConfig, seed = 1): Plan {
     }
   }
 
+  // Fill pass: top up activities that finished the horizon under target by
+  // dropping sessions into free, non-rest days that respect the minimum gap.
+  for (const a of activities) {
+    const target = Math.round(sessionsPerWeek(a) * weeks);
+    let placed = scheduled.get(a.id) ?? 0;
+    if (placed >= target) continue;
+    for (const day of days) {
+      if (placed >= target) break;
+      if (day.rest) continue;
+      if (day.sessions.length >= maxSessionsPerDay) continue;
+      if (day.sessions.some((s) => s.activityId === a.id)) continue;
+      const near = days.some(
+        (o) =>
+          Math.abs(o.index - day.index) < a.minGapDays &&
+          o.index !== day.index &&
+          o.sessions.some((s) => s.activityId === a.id),
+      );
+      if (near) continue;
+      day.sessions.push({ activityId: a.id, name: a.name, color: a.color });
+      placed++;
+      scheduled.set(a.id, placed);
+    }
+  }
+
   const planWeeks: PlanWeek[] = [];
   for (let w = 0; w < weeks; w++) {
     planWeeks.push({
