@@ -145,9 +145,21 @@ export function buildPlan(config: PlanConfig, seed = 1): Plan {
 
   const days: PlanDay[] = [];
 
+  // Earlier activities in the list win ties when the plan can't fit everything.
+  const priority = new Map<string, number>();
+  activities.forEach((a, i) => priority.set(a.id, (activities.length - i) * 0.05));
+
+  const allowsDay = (a: Activity, weekday: number) =>
+    !a.lockedDays?.length || a.lockedDays.includes(weekday);
+
+  // Weekdays that at least one locked activity needs — keep them free of rest.
+  const protectedDays = new Set<number>();
+  for (const a of activities) for (const d of a.lockedDays ?? []) protectedDays.add(d);
+
   for (let w = 0; w < weeks; w++) {
-    // Rest days: spread them out, biased toward the end of the week.
-    const restSet = pickRestDays(restDaysPerWeek, w, rand);
+    // Rest days: spread them out, avoiding weekdays locked by an activity.
+    const restSet = pickRestDays(restDaysPerWeek, w, rand, protectedDays);
+
 
     for (let d = 0; d < 7; d++) {
       const index = w * 7 + d;
