@@ -19,6 +19,17 @@
  */
 
 @theme inline {
+  --font-display: "Bebas Neue", "Impact", sans-serif;
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --color-act-1: var(--act-1);
+  --color-act-2: var(--act-2);
+  --color-act-3: var(--act-3);
+  --color-act-4: var(--act-4);
+  --color-act-5: var(--act-5);
+  --color-act-6: var(--act-6);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
