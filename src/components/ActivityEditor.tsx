@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PALETTE, sessionsPerWeek, type Activity, type Cadence } from "@/lib/scheduler";
+import { paletteColor, sessionsPerWeek, type Activity, type Cadence } from "@/lib/scheduler";
 
 interface Props {
   activities: Activity[];
@@ -35,7 +35,7 @@ export function ActivityEditor({ activities, onChange }: Props) {
         times: 1,
         cadence: "weekly",
         minGapDays: 2,
-        color: PALETTE[activities.length % PALETTE.length],
+        color: paletteColor(activities.length),
       },
     ]);
 

@@ -6,7 +6,7 @@ import { PlanCalendar } from "@/components/PlanCalendar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { buildPlan, PALETTE, type Activity } from "@/lib/scheduler";
+import { buildPlan, paletteColor, type Activity } from "@/lib/scheduler";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,9 +31,9 @@ export const Route = createFileRoute("/")({
 const STORAGE_KEY = "rolling-plan-config-v1";
 
 const DEFAULT_ACTIVITIES: Activity[] = [
-  { id: "run", name: "Running", times: 3, cadence: "biweekly", minGapDays: 2, color: PALETTE[0] },
-  { id: "box", name: "Boxing", times: 1, cadence: "weekly", minGapDays: 3, color: PALETTE[1] },
-  { id: "cyc", name: "Cycling", times: 1, cadence: "monthly", minGapDays: 7, color: PALETTE[2] },
+  { id: "run", name: "Running", times: 3, cadence: "biweekly", minGapDays: 2, color: paletteColor(0) },
+  { id: "box", name: "Boxing", times: 1, cadence: "weekly", minGapDays: 3, color: paletteColor(1) },
+  { id: "cyc", name: "Cycling", times: 1, cadence: "monthly", minGapDays: 7, color: paletteColor(2) },
 ];
 
 function startOfWeek(d: Date) {
@@ -213,7 +213,7 @@ function SliderRow({
         min={min}
         max={max}
         step={1}
-        onValueChange={(v) => onChange(v[0])}
+        onValueChange={(v) => onChange(v[0] ?? min)}
         aria-label={label}
       />
     </div>

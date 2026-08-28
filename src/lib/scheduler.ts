@@ -73,6 +73,10 @@ export const PALETTE = [
   "var(--color-act-6)",
 ];
 
+export function paletteColor(i: number): string {
+  return PALETTE[i % PALETTE.length] ?? PALETTE[0]!;
+}
+
 export function sessionsPerWeek(a: Activity): number {
   return a.times / CADENCE_WEEKS[a.cadence];
 }
