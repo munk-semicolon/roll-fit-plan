@@ -8,6 +8,8 @@ export interface Activity {
   /** Minimum whole days between two sessions of this activity. */
   minGapDays: number;
   color: string;
+  /** Weekday indexes (0 = Mon … 6 = Sun) this activity is locked to. Empty = any day. */
+  lockedDays?: number[];
 }
 
 export interface PlanSession {
