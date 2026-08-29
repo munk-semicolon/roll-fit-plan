@@ -215,6 +215,7 @@ export function buildPlan(config: PlanConfig, seed = 1): Plan {
       if (day.rest) continue;
       if (day.sessions.length >= maxSessionsPerDay) continue;
       if (day.sessions.some((s) => s.activityId === a.id)) continue;
+      if (!allowsDay(a, day.index % 7)) continue;
       const near = days.some(
         (o) =>
           Math.abs(o.index - day.index) < a.minGapDays &&
