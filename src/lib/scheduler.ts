@@ -176,9 +176,16 @@ export function buildPlan(config: PlanConfig, seed = 1): Plan {
           const pick = activities
             .filter((a) => !day.sessions.some((s) => s.activityId === a.id))
             .filter((a) => index - (lastDay.get(a.id) ?? -999) >= a.minGapDays)
-            .filter((a) => (credit.get(a.id) ?? 0) >= 0.72)
+            .filter((a) => allowsDay(a, d))
+            // Locked activities get a lower bar — their windows are scarce.
+            .filter((a) => (credit.get(a.id) ?? 0) >= (a.lockedDays?.length ? 0.45 : 0.72))
             .filter((a) => (scheduled.get(a.id) ?? 0) < (quota.get(a.id) ?? 0))
-            .sort((a, b) => (credit.get(b.id) ?? 0) - (credit.get(a.id) ?? 0))[0];
+            .sort(
+              (a, b) =>
+                (credit.get(b.id) ?? 0) +
+                (priority.get(b.id) ?? 0) -
+                ((credit.get(a.id) ?? 0) + (priority.get(a.id) ?? 0)),
+            )[0];
           if (!pick) break;
           day.sessions.push({ activityId: pick.id, name: pick.name, color: pick.color });
           credit.set(pick.id, (credit.get(pick.id) ?? 0) - 1);
@@ -208,6 +215,7 @@ export function buildPlan(config: PlanConfig, seed = 1): Plan {
       if (day.rest) continue;
       if (day.sessions.length >= maxSessionsPerDay) continue;
       if (day.sessions.some((s) => s.activityId === a.id)) continue;
+      if (!allowsDay(a, day.index % 7)) continue;
       const near = days.some(
         (o) =>
           Math.abs(o.index - day.index) < a.minGapDays &&
@@ -259,7 +267,12 @@ export function buildPlan(config: PlanConfig, seed = 1): Plan {
   return { weeks: planWeeks, fit, score, warnings };
 }
 
-function pickRestDays(count: number, week: number, rand: () => number): Set<number> {
+function pickRestDays(
+  count: number,
+  week: number,
+  rand: () => number,
+  protectedDays: Set<number> = new Set(),
+): Set<number> {
   const set = new Set<number>();
   if (count <= 0) return set;
   if (count >= 7) return new Set([0, 1, 2, 3, 4, 5, 6]);
@@ -270,7 +283,9 @@ function pickRestDays(count: number, week: number, rand: () => number): Set<numb
   for (let i = 0; i < count; i++) {
     let d = Math.round(i * step + offset) % 7;
     let guard = 0;
-    while (set.has(d) && guard++ < 7) d = (d + 1) % 7;
+    // Skip taken days, and locked weekdays while free days remain.
+    while ((set.has(d) || (protectedDays.has(d) && set.size + protectedDays.size < 7)) && guard++ < 14)
+      d = (d + 1) % 7;
     set.add(d);
   }
   return set;
