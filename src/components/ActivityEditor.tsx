@@ -1,4 +1,5 @@
-import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { paletteColor, sessionsPerWeek, type Activity, type Cadence } from "@/lib/scheduler";
+import {
+  DAY_LABELS,
+  paletteColor,
+  sessionsPerWeek,
+  type Activity,
+  type Cadence,
+} from "@/lib/scheduler";
 
 interface Props {
   activities: Activity[];
@@ -23,8 +30,26 @@ const CADENCE_LABEL: Record<Cadence, string> = {
 };
 
 export function ActivityEditor({ activities, onChange }: Props) {
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+
   const update = (id: string, patch: Partial<Activity>) =>
     onChange(activities.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+
+  const toggleDay = (a: Activity, day: number) => {
+    const cur = a.lockedDays ?? [];
+    const next = cur.includes(day) ? cur.filter((d) => d !== day) : [...cur, day].sort();
+    update(a.id, { lockedDays: next });
+  };
+
+  const move = (from: number, to: number) => {
+    if (from === to) return;
+    const next = [...activities];
+    const [item] = next.splice(from, 1);
+    if (!item) return;
+    next.splice(to, 0, item);
+    onChange(next);
+  };
 
   const add = () =>
     onChange([
@@ -36,18 +61,48 @@ export function ActivityEditor({ activities, onChange }: Props) {
         cadence: "weekly",
         minGapDays: 2,
         color: paletteColor(activities.length),
+        lockedDays: [],
       },
     ]);
 
   return (
     <div className="space-y-3">
-      {activities.map((a) => (
+      <p className="text-xs text-muted-foreground">
+        Drag to reorder — activities higher in the list win when the plan can&apos;t fit everything.
+      </p>
+
+      {activities.map((a, i) => (
         <div
           key={a.id}
-          className="rounded-lg border border-border bg-surface-raised p-4"
+          onDragOver={(e) => {
+            e.preventDefault();
+            setOverIndex(i);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            if (dragIndex !== null) move(dragIndex, i);
+            setDragIndex(null);
+            setOverIndex(null);
+          }}
+          className={`rounded-lg border border-border bg-surface-raised p-4 transition-opacity ${
+            dragIndex === i ? "opacity-50" : ""
+          } ${overIndex === i && dragIndex !== null && dragIndex !== i ? "ring-2 ring-primary" : ""}`}
           style={{ borderLeft: `4px solid ${a.color}` }}
         >
           <div className="flex items-center gap-2">
+            <span
+              draggable
+              onDragStart={() => setDragIndex(i)}
+              onDragEnd={() => {
+                setDragIndex(null);
+                setOverIndex(null);
+              }}
+              aria-label={`Reorder ${a.name}`}
+              className="flex cursor-grab items-center gap-1 text-muted-foreground active:cursor-grabbing"
+            >
+              <GripVertical className="h-4 w-4" />
+              <span className="text-xs font-semibold">{i + 1}</span>
+            </span>
             <Input
               value={a.name}
               aria-label="Activity name"
@@ -110,6 +165,33 @@ export function ActivityEditor({ activities, onChange }: Props) {
                 }
                 className="h-9"
               />
+            </div>
+          </div>
+
+          <div className="mt-3 space-y-1">
+            <Label className="text-xs text-muted-foreground">
+              Lock to days {a.lockedDays?.length ? "" : "(any day)"}
+            </Label>
+            <div className="flex flex-wrap gap-1">
+              {DAY_LABELS.map((label, d) => {
+                const on = a.lockedDays?.includes(d) ?? false;
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    aria-pressed={on}
+                    aria-label={`${label} for ${a.name}`}
+                    onClick={() => toggleDay(a, d)}
+                    className={`h-7 w-9 rounded border text-[11px] font-semibold uppercase transition-colors ${
+                      on
+                        ? "border-transparent bg-primary text-primary-foreground"
+                        : "border-border text-muted-foreground hover:border-primary/60"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
