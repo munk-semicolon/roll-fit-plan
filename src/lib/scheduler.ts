@@ -267,7 +267,12 @@ export function buildPlan(config: PlanConfig, seed = 1): Plan {
   return { weeks: planWeeks, fit, score, warnings };
 }
 
-function pickRestDays(count: number, week: number, rand: () => number): Set<number> {
+function pickRestDays(
+  count: number,
+  week: number,
+  rand: () => number,
+  protectedDays: Set<number> = new Set(),
+): Set<number> {
   const set = new Set<number>();
   if (count <= 0) return set;
   if (count >= 7) return new Set([0, 1, 2, 3, 4, 5, 6]);
@@ -278,7 +283,9 @@ function pickRestDays(count: number, week: number, rand: () => number): Set<numb
   for (let i = 0; i < count; i++) {
     let d = Math.round(i * step + offset) % 7;
     let guard = 0;
-    while (set.has(d) && guard++ < 7) d = (d + 1) % 7;
+    // Skip taken days, and locked weekdays while free days remain.
+    while ((set.has(d) || (protectedDays.has(d) && set.size + protectedDays.size < 7)) && guard++ < 14)
+      d = (d + 1) % 7;
     set.add(d);
   }
   return set;
