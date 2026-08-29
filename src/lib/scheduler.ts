@@ -176,9 +176,16 @@ export function buildPlan(config: PlanConfig, seed = 1): Plan {
           const pick = activities
             .filter((a) => !day.sessions.some((s) => s.activityId === a.id))
             .filter((a) => index - (lastDay.get(a.id) ?? -999) >= a.minGapDays)
-            .filter((a) => (credit.get(a.id) ?? 0) >= 0.72)
+            .filter((a) => allowsDay(a, d))
+            // Locked activities get a lower bar — their windows are scarce.
+            .filter((a) => (credit.get(a.id) ?? 0) >= (a.lockedDays?.length ? 0.45 : 0.72))
             .filter((a) => (scheduled.get(a.id) ?? 0) < (quota.get(a.id) ?? 0))
-            .sort((a, b) => (credit.get(b.id) ?? 0) - (credit.get(a.id) ?? 0))[0];
+            .sort(
+              (a, b) =>
+                (credit.get(b.id) ?? 0) +
+                (priority.get(b.id) ?? 0) -
+                ((credit.get(a.id) ?? 0) + (priority.get(a.id) ?? 0)),
+            )[0];
           if (!pick) break;
           day.sessions.push({ activityId: pick.id, name: pick.name, color: pick.color });
           credit.set(pick.id, (credit.get(pick.id) ?? 0) - 1);
