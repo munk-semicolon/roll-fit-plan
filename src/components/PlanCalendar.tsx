@@ -13,21 +13,16 @@ export function PlanCalendar({ plan }: Props) {
   today.setHours(0, 0, 0, 0);
 
   return (
-    <div className="space-y-4">
-      <div className="hidden grid-cols-7 gap-2 px-1 sm:grid">
-        {DAY_LABELS.map((d) => (
-          <div key={d} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {d}
-          </div>
-        ))}
-      </div>
-
+    <div className="space-y-6">
       {plan.weeks.map((week) => {
         const sessionCount = week.days.reduce((s, d) => s + d.sessions.length, 0);
         return (
-          <div key={week.index}>
-            <div className="mb-2 flex items-baseline justify-between px-1">
-              <h3 className="text-lg">
+          <section
+            key={week.index}
+            className="rounded-3xl border border-border bg-surface-raised/60 p-3 sm:p-4"
+          >
+            <div className="mb-3 flex items-baseline justify-between px-2">
+              <h3 className="text-xl">
                 Week {week.index + 1}
                 <span className="ml-2 font-sans text-xs font-medium tracking-normal text-muted-foreground">
                   from {fmt(week.start)}
@@ -36,21 +31,30 @@ export function PlanCalendar({ plan }: Props) {
               <span className="text-xs text-muted-foreground">{sessionCount} sessions</span>
             </div>
 
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-7">
+            <div className="space-y-2">
               {week.days.map((day) => {
                 const isToday = day.date.getTime() === today.getTime();
                 return (
                   <div
                     key={day.index}
-                  className={`min-h-16 rounded-xl border p-2.5 shadow-sm transition-colors sm:min-h-24 ${
+                    className={`rounded-2xl border p-3.5 shadow-sm transition-colors ${
                       day.rest
-                        ? "border-dashed border-border bg-surface/40"
+                        ? "border-dashed border-border bg-surface/50"
                         : "border-border bg-surface"
                     } ${isToday ? "ring-2 ring-primary" : ""}`}
                   >
-                    <div className="mb-1.5 flex items-center justify-between text-[11px] font-medium text-muted-foreground">
-                      <span className="sm:hidden">{DAY_LABELS[day.index % 7]}</span>
-                      <span>{fmt(day.date)}</span>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-sm font-semibold">
+                        {DAY_LABELS[day.index % 7]}
+                        {isToday && (
+                          <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                            Today
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {fmt(day.date)}
+                      </span>
                     </div>
 
                     {day.rest ? (
@@ -58,12 +62,15 @@ export function PlanCalendar({ plan }: Props) {
                     ) : day.sessions.length === 0 ? (
                       <p className="text-xs text-muted-foreground/60">Open</p>
                     ) : (
-                      <ul className="space-y-1">
+                      <ul className="space-y-1.5">
                         {day.sessions.map((s, i) => (
                           <li
                             key={i}
-                            className="rounded px-2 py-1 text-xs font-semibold"
-                            style={{ backgroundColor: `color-mix(in oklab, ${s.color} 22%, transparent)`, color: s.color }}
+                            className="rounded-lg px-3 py-1.5 text-xs font-semibold"
+                            style={{
+                              backgroundColor: `color-mix(in oklab, ${s.color} 22%, transparent)`,
+                              color: s.color,
+                            }}
                           >
                             {s.name}
                           </li>
@@ -74,7 +81,7 @@ export function PlanCalendar({ plan }: Props) {
                 );
               })}
             </div>
-          </div>
+          </section>
         );
       })}
     </div>
