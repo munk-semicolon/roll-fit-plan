@@ -42,13 +42,13 @@ export function PlanCalendar({ plan }: Props) {
                 return (
                   <div
                     key={day.index}
-                    className={`min-h-24 rounded-lg border p-2 transition-colors ${
+                  className={`min-h-16 rounded-xl border p-2.5 shadow-sm transition-colors sm:min-h-24 ${
                       day.rest
                         ? "border-dashed border-border bg-surface/40"
                         : "border-border bg-surface"
                     } ${isToday ? "ring-2 ring-primary" : ""}`}
                   >
-                    <div className="mb-2 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <div className="mb-1.5 flex items-center justify-between text-[11px] font-medium text-muted-foreground">
                       <span className="sm:hidden">{DAY_LABELS[day.index % 7]}</span>
                       <span>{fmt(day.date)}</span>
                     </div>
